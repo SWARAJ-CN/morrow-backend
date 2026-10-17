@@ -17,6 +17,9 @@ import { configureSocket } from './socket.js';
 
 const app = express();
 const server = createServer(app);
+// Render (and most hosts) terminate TLS at a proxy — trust it so
+// `request.protocol` reports https and generated URLs stay absolute.
+app.set('trust proxy', 1);
 const allowedOrigins = config.clientOrigin.split(',').map((origin) => origin.trim());
 const originCheck = (origin, callback) => {
   if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) return callback(null, true);
@@ -31,6 +34,12 @@ app.use(express.json({ limit: '10kb' }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 200, standardHeaders: 'draft-8', legacyHeaders: false }));
 app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-8', legacyHeaders: false }));
 
+app.get('/', (_request, response) => response.json({
+  name: 'Morrow API',
+  status: 'ok',
+  message: 'Morrow backend is running. The mobile app talks to /api/*.',
+  endpoints: ['/health', '/api/auth', '/api/conversations', '/api/users', '/api/stories', '/api/notifications', '/api/uploads'],
+}));
 app.get('/health', (_request, response) => response.json({ status: 'ok' }));
 app.use('/uploads', express.static('uploads', { dotfiles: 'deny', index: false, maxAge: '1d' }));
 app.use('/api/auth', authRouter);
@@ -39,6 +48,8 @@ app.use('/api/notifications', notificationRouter);
 app.use('/api/stories', storyRouter);
 app.use('/api/uploads', uploadRouter);
 app.use('/api/users', userRouter);
+// Unknown routes answer with JSON instead of Express' HTML "Cannot GET /x".
+app.use((request, response) => response.status(404).json({ error: `Cannot ${request.method} ${request.path}` }));
 app.use((error, _request, response, _next) => {
   console.error(error);
   if (error.code === 'LIMIT_FILE_SIZE') return response.status(413).json({ error: 'Files must be 50 MB or smaller.' });
