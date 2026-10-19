@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema(
     bio: { type: String, trim: true, maxlength: 160, default: '' },
     profilePhoto: { type: String, default: null },
     themeColor: { type: String, trim: true, default: null, maxlength: 9 },
+    lastSeen: { type: Date, default: null },
     pushTokens: { type: [String], default: [] },
     blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     passwordHash: { type: String, required: true, select: false },
