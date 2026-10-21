@@ -5,6 +5,23 @@ import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { mediaKindForMimeType, upload, uploadDirectory } from '../middleware/upload.js';
 import { cloudinaryEnabled, uploadToCloudinary } from '../cloudinary.js';
+import { config } from '../config.js';
+
+/**
+ * The address a browser should use to reach this server.
+ *
+ * Behind a proxy the request's own host is the internal one, so the
+ * forwarded headers win when they are present.
+ */
+function publicOrigin(request) {
+  const configured = (config.publicUrl || '').replace(/\/+$/, '');
+  if (configured) return configured;
+  const forwardedHost = request.headers['x-forwarded-host'];
+  const forwardedProto = request.headers['x-forwarded-proto'];
+  const host = forwardedHost || request.get('host');
+  const protocol = (forwardedProto ? String(forwardedProto).split(',')[0] : request.protocol) || 'https';
+  return `${protocol}://${host}`;
+}
 
 export const uploadRouter = Router();
 uploadRouter.use(requireAuth);
@@ -23,6 +40,7 @@ uploadRouter.post('/', upload.single('file'), async (request, response, next) =>
       return response.status(201).json({
         asset: {
           url: uploaded.url,
+          thumbnailUrl: uploaded.thumbnailUrl || null,
           publicId: uploaded.publicId,
           provider: 'cloudinary',
           mediaType,
@@ -40,7 +58,7 @@ uploadRouter.post('/', upload.single('file'), async (request, response, next) =>
 
     return response.status(201).json({
       asset: {
-        url: `${request.protocol}://${request.get('host')}/uploads/${filename}`,
+        url: `${publicOrigin(request)}/uploads/${filename}`,
         provider: 'local',
         mediaType,
         name: originalname,

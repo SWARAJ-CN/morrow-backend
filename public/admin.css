@@ -1,0 +1,87 @@
+:root {
+    --brand: #075E54;
+    --brand-soft: #E8F1EE;
+    --ink: #172824;
+    --muted: #71817B;
+    --line: #E5ECE8;
+    --canvas: #F4F7F5;
+    --danger: #B5443A;
+    --ok: #1F8A5B;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    background: var(--brand);
+    color: #fff;
+    padding: 22px 24px;
+  }
+  header h1 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -0.2px; }
+  header p { margin: 4px 0 0; font-size: 12.5px; opacity: 0.75; }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 20px 60px; }
+  .card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  .card h2 { margin: 0 0 3px; font-size: 15px; font-weight: 800; }
+  .card p.hint { margin: 0 0 14px; font-size: 12.5px; color: var(--muted); }
+  label { display: block; font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  input[type=text], input[type=password] {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 11px 12px;
+    font-size: 14px;
+    background: #FBFDFC;
+    color: var(--ink);
+    outline: none;
+  }
+  input:focus { border-color: var(--brand); background: #fff; }
+  button {
+    border: 0;
+    border-radius: 10px;
+    background: var(--brand);
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 700;
+    padding: 11px 18px;
+    cursor: pointer;
+  }
+  button.secondary { background: var(--brand-soft); color: var(--brand); }
+  button:disabled { opacity: .55; cursor: default; }
+  .row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .row > .grow { flex: 1 1 260px; min-width: 0; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .stat { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .stat b { display: block; font-size: 22px; font-weight: 800; line-height: 1.2; }
+  .stat span { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 700; }
+  .live { display: flex; align-items: center; gap: 7px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(31,138,91,.15); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); font-weight: 800; padding: 0 10px 8px 0; }
+  td { padding: 9px 10px 9px 0; border-top: 1px solid var(--line); vertical-align: middle; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--brand-soft); color: var(--brand); display: inline-flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 800; margin-right: 9px; }
+  .name { display: flex; align-items: center; }
+  .muted { color: var(--muted); }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--brand-soft); color: var(--brand); }
+  .pill.off { background: #F0F3F1; color: var(--muted); }
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 16px);
+    background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 11px;
+    font-size: 13px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.22);
+    opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+    max-width: min(90vw, 460px); text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast.error { background: var(--danger); }
+  .toast.ok { background: var(--ok); }
+  .empty { padding: 26px 0; text-align: center; color: var(--muted); font-size: 13px; }
+  .lock { max-width: 420px; margin: 40px auto; }

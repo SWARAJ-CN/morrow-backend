@@ -52,3 +52,10 @@ export function presenceSnapshot(userIds = [], persisted = new Map()) {
     lastSeen: isOnline(userId) ? null : (persisted.get(userId) || getLastSeen(userId) || null),
   }));
 }
+
+// How many users are currently connected.
+export function liveCount() {
+  let total = 0;
+  for (const count of connections.values()) if (count > 0) total += 1;
+  return total;
+}

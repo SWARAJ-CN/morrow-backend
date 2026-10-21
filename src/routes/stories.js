@@ -22,9 +22,30 @@ storyRouter.get('/', async (request, response, next) => {
     for (const story of stories) {
       const ownerId = story.owner.id;
       if (!byOwner.has(ownerId)) byOwner.set(ownerId, { owner: story.owner, stories: [] });
-      byOwner.get(ownerId).stories.push(story);
+      // `viewed` is relative to the person asking: your own story is never
+      // "seen", and a story you have opened is.
+      const viewed = ownerId === String(request.userId)
+        ? true
+        : (story.viewedBy || []).some((id) => String(id) === String(request.userId));
+      byOwner.get(ownerId).stories.push({ ...story.toJSON(), viewed });
     }
     return response.json({ stories: [...byOwner.values()] });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+// Record that the caller has opened a story.
+storyRouter.post('/:storyId/view', async (request, response, next) => {
+  try {
+    if (!mongoose.isValidObjectId(request.params.storyId)) return response.status(400).json({ error: 'Invalid story.' });
+    const story = await Story.findOneAndUpdate(
+      { _id: request.params.storyId, expiresAt: { $gt: new Date() } },
+      { $addToSet: { viewedBy: request.userId } },
+      { new: true },
+    );
+    if (!story) return response.status(404).json({ error: 'Story not found.' });
+    return response.json({ story });
   } catch (error) {
     return next(error);
   }

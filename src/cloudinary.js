@@ -40,11 +40,31 @@ export async function uploadToCloudinary(buffer, { filename, mimeType } = {}) {
     throw new Error(`Cloudinary upload failed: ${detail}`);
   }
 
+  const url = data.secure_url || data.url;
+
   return {
-    url: data.secure_url || data.url,
+    url,
+    // A poster frame for videos, so the app can show a preview without
+    // decoding the video itself.
+    thumbnailUrl: data.resource_type === 'video' ? videoThumbnail(url, data.public_id) : null,
     publicId: data.public_id,
     resourceType: data.resource_type,
     format: data.format,
     bytes: data.bytes,
   };
+}
+
+/**
+ * Build a poster-frame URL for an uploaded video.
+ *
+ * Cloudinary can deliver any frame of a video as an image, so the same
+ * public id with `so_0` (the first second) and a `.jpg` extension gives a
+ * thumbnail.
+ */
+export function videoThumbnail(url, publicId) {
+  if (!publicId) return null;
+  const base = String(url || '');
+  const folder = base.includes('/upload/') ? base.slice(0, base.indexOf('/upload/')) : '';
+  const id = String(publicId).replace(/\//g, '/');
+  return `${folder}/upload/so_0/${id}.jpg`;
 }

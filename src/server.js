@@ -7,6 +7,8 @@ import { Server } from 'socket.io';
 import { config } from './config.js';
 import { connectDatabase } from './db.js';
 import { authRouter } from './routes/auth.js';
+import { adminRouter } from './routes/admin.js';
+import { appRouter } from './routes/app.js';
 import { assistantRouter } from './routes/assistant.js';
 import { conversationRouter } from './routes/conversations.js';
 import { notificationRouter } from './routes/notifications.js';
@@ -44,11 +46,15 @@ app.get('/', (_request, response) => response.json({
   name: 'Morrow API',
   status: 'ok',
   message: 'Morrow backend is running. The mobile app talks to /api/*.',
-  endpoints: ['/health', '/api/auth', '/api/conversations', '/api/users', '/api/stories', '/api/notifications', '/api/uploads', '/api/assistant'],
+  endpoints: ['/health', '/api/auth', '/api/conversations', '/api/users', '/api/stories', '/api/notifications', '/api/uploads', '/api/assistant', '/api/admin', '/api/app'],
 }));
 app.get('/health', (_request, response) => response.json({ status: 'ok' }));
 app.use('/uploads', express.static('uploads', { dotfiles: 'deny', index: false, maxAge: '1d' }));
+// The admin panel is a single static page; it talks to /api/admin/*.
+app.use('/admin', express.static('public', { index: 'admin.html', extensions: ['html'] }));
 app.use('/api/auth', authRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/app', appRouter);
 app.use('/api/assistant', assistantRouter);
 // Backwards-compatible alias for clients built before the rename.
 app.use('/api/ai', assistantRouter);

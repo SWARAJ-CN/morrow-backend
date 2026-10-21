@@ -18,7 +18,13 @@ const messageSchema = z.object({
   mediaUrl: z.string().url().nullable().optional(),
   mediaName: z.string().trim().max(180).default(''),
   mediaType: z.string().trim().max(100).default(''),
+  thumbnailUrl: z.string().url().nullable().optional(),
+  replyTo: z.string().trim().max(40).nullable().optional(),
   durationSeconds: z.number().min(0).nullable().optional(),
+  reactions: z.array(z.object({
+    emoji: z.string().trim().min(1).max(8),
+    users: z.array(z.string().trim().max(40)).max(100).default([]),
+  })).max(20).optional(),
 }).refine((message) => message.text.length > 0 || Boolean(message.mediaUrl), 'Message content is required.');
 const preferencesSchema = z.object({ wallpaperUrl: z.string().url().nullable(), wallpaperBrightness: z.number().min(0.25).max(1) });
 
@@ -89,9 +95,54 @@ conversationRouter.get('/:conversationId/messages', async (request, response, ne
 
     const messages = await Message.find({ conversation: conversation.id })
       .populate('sender', 'displayName phone profilePhoto')
+      .populate({ path: 'replyTo', select: 'text kind sender createdAt', populate: { path: 'sender', select: 'displayName' } })
       .sort({ createdAt: -1 })
       .limit(50);
     return response.json({ messages: messages.reverse() });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+// Add or remove a reaction on a message.
+conversationRouter.post('/:conversationId/messages/:messageId/react', async (request, response, next) => {
+  try {
+    if (!validId(request.params.conversationId) || !validId(request.params.messageId)) {
+      return response.status(400).json({ error: 'Invalid message.' });
+    }
+    const parsed = z.object({ emoji: z.string().trim().min(1).max(8) }).safeParse(request.body);
+    if (!parsed.success) return response.status(400).json({ error: 'Pick a reaction.' });
+
+    const conversation = await Conversation.findOne({ _id: request.params.conversationId, members: request.userId });
+    if (!conversation) return response.status(404).json({ error: 'Conversation not found.' });
+
+    const message = await Message.findOne({ _id: request.params.messageId, conversation: conversation.id });
+    if (!message) return response.status(404).json({ error: 'Message not found.' });
+
+    const emoji = parsed.data.emoji;
+    const existing = (message.reactions || []).find((reaction) => reaction.emoji === emoji);
+    const already = existing?.user?.some?.((id) => String(id) === String(request.userId));
+
+    if (already) {
+      // Reacting again removes the reaction.
+      message.reactions = message.reactions
+        .map((reaction) => (reaction.emoji === emoji
+          ? { ...reaction, user: reaction.user.filter((id) => String(id) !== String(request.userId)) }
+          : reaction))
+        .filter((reaction) => reaction.user.length > 0);
+    } else if (existing) {
+      existing.user = [...(existing.user || []), request.userId];
+    } else {
+      message.reactions = [...(message.reactions || []), { emoji, user: [request.userId] }];
+    }
+    message.markModified('reactions');
+    await message.save();
+
+    await message.populate('sender', 'displayName phone profilePhoto');
+    request.app.get('io').to(`conversation:${conversation.id}`).emit('message:updated', message);
+    conversation.members.forEach((member) => request.app.get('io').to(`user:${member}`).emit('message:updated', message));
+
+    return response.json({ message });
   } catch (error) {
     return next(error);
   }

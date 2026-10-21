@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { Conversation } from '../models/Conversation.js';
 import { Message } from '../models/Message.js';
 import { User } from '../models/User.js';
+import { AssistantThread } from '../models/AssistantThread.js';
 import { requireAuth } from '../middleware/auth.js';
 import { aiConfigured, complete, parseJson, AiError } from '../ai/provider.js';
 import {
@@ -302,4 +303,82 @@ assistantRouter.use((error, _request, response, _next) => {
     return response.status(error.status).json({ error: error.message, code: error.code });
   }
   return response.status(500).json({ error: 'The assistant is temporarily unavailable.' });
+});
+
+// ---------------------------------------------------------------------------
+// Saved assistant conversations
+// ---------------------------------------------------------------------------
+
+const threadSchema = z.object({
+  title: z.string().trim().max(120).default('New chat'),
+  conversation: z.string().trim().max(40).nullable().optional(),
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string().trim().min(1).max(8000),
+  })).max(200).default([]),
+});
+
+/** List the caller's saved conversations, newest first. */
+assistantRouter.get('/history', async (request, response, next) => {
+  try {
+    const threads = await AssistantThread.find({ user: request.userId })
+      .select('title messages conversation createdAt updatedAt')
+      .sort({ updatedAt: -1 })
+      .limit(100);
+    return response.json({
+      threads: threads.map((thread) => ({
+        id: thread.id,
+        title: thread.title,
+        conversation: thread.conversation,
+        messageCount: thread.messages.length,
+        preview: thread.messages.length ? thread.messages[thread.messages.length - 1].content.slice(0, 140) : '',
+        createdAt: thread.createdAt,
+        updatedAt: thread.updatedAt,
+      })),
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+/** Save (or overwrite) a conversation. */
+assistantRouter.post('/history', async (request, response, next) => {
+  try {
+    const parsed = threadSchema.safeParse(request.body);
+    if (!parsed.success) return response.status(400).json({ error: 'That conversation could not be saved.' });
+
+    const thread = await AssistantThread.create({
+      user: request.userId,
+      title: parsed.data.title || 'New chat',
+      conversation: parsed.data.conversation || null,
+      messages: parsed.data.messages,
+    });
+    return response.status(201).json({
+      thread: { id: thread.id, title: thread.title, createdAt: thread.createdAt, updatedAt: thread.updatedAt },
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+/** Delete one conversation. */
+assistantRouter.delete('/history/:threadId', async (request, response, next) => {
+  try {
+    if (!mongoose.isValidObjectId(request.params.threadId)) return response.status(400).json({ error: 'Invalid conversation.' });
+    const deleted = await AssistantThread.findOneAndDelete({ _id: request.params.threadId, user: request.userId });
+    if (!deleted) return response.status(404).json({ error: 'Conversation not found.' });
+    return response.status(204).end();
+  } catch (error) {
+    return next(error);
+  }
+});
+
+/** Delete every conversation. */
+assistantRouter.delete('/history', async (request, response, next) => {
+  try {
+    const result = await AssistantThread.deleteMany({ user: request.userId });
+    return response.json({ deleted: result.deletedCount || 0 });
+  } catch (error) {
+    return next(error);
+  }
 });

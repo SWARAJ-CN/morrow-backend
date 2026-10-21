@@ -1,5 +1,5 @@
 /**
- * Provider-agnostic LLM client for Morrow AI.
+ * Provider-agnostic LLM client for the Morrow assistant.
  *
  * The API key never leaves the server: the Expo app talks to `/api/ai/*` and
  * this module forwards the request to whichever provider is configured.

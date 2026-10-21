@@ -7,7 +7,17 @@ import multer from 'multer';
 export const uploadDirectory = path.resolve('uploads');
 mkdirSync(uploadDirectory, { recursive: true });
 
-export const allowedMimeType = /^(image\/(jpeg|png|webp|gif|svg\+xml)|video\/(mp4|quicktime|webm)|audio\/(mpeg|mp4|aac|wav|webm|x-m4a|ogg)|application\/(pdf|zip|vnd\.|octet-stream|json|x-zip-compressed|msword)|text\/(plain|csv))/i;
+// The types people actually share. Document formats are matched on their
+// vendor prefix (`vnd.`), on the `x-` convention, or on a small explicit
+// list, so a .docx or .pages file is not rejected as "unsupported".
+export const allowedMimeType = new RegExp(
+  '^(image\\/(jpeg|jpg|png|webp|gif|svg\\+xml|heic|heif|bmp|tiff?)'
+  + '|video\\/(mp4|quicktime|webm|mov|x-m4v|3gpp|3gpp2|mpeg)'
+  + '|audio\\/(mpeg|mp3|mp4|aac|wav|webm|x-m4a|ogg|amr|3gpp)'
+  + '|application\\/(pdf|zip|octet-stream|json|x-zip-compressed|msword|mspowerpoint|msaccess|ms-excel|rtf|vnd\\.[\\w.+-]+|epub\\+zip|x-tar|gzip|x-gzip|x-rar-compressed|x-7z-compressed|x-bzip|x-bzip2|x-tgz|javascript|x-javascript|sql)'
+  + '|text\\/(plain|csv|markdown|html|rtf|calendar|vcard|typescript))$',
+  'i',
+);
 
 export const upload = multer({
   storage: multer.memoryStorage(),

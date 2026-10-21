@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Morrow Admin</title>
+<link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+<header>
+  <h1>Morrow Admin</h1>
+  <p>Live users and the invite link, without touching the server.</p>
+</header>
+
+<main>
+  <section class="card lock" id="gate">
+    <h2>Admin token</h2>
+    <p class="hint">Paste the token printed in the server log, or set <code>ADMIN_TOKEN</code> in the server environment.</p>
+    <div class="row">
+      <div class="grow">
+        <label for="token">Token</label>
+        <input type="password" id="token" placeholder="Paste your admin token" autocomplete="off" />
+      </div>
+      <button id="gateBtn">Unlock</button>
+    </div>
+  </section>
+
+  <div id="app" hidden>
+    <div class="stats" id="stats"></div>
+
+    <section class="card">
+      <h2>Invite link</h2>
+      <p class="hint">Where the “Invite to Morrow” button sends people. Changes apply to the app immediately — no deploy needed.</p>
+      <div class="row">
+        <div class="grow">
+          <label for="invite">Invite URL</label>
+          <input type="text" id="invite" placeholder="https://play.google.com/store/apps/details?id=com.swarajcn.app" />
+        </div>
+        <button id="saveBtn">Save</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Live users <span class="pill" id="liveCount">0</span></h2>
+      <p class="hint">People with an open session right now.</p>
+      <div id="live"></div>
+    </section>
+
+    <section class="card">
+      <h2>All users <span class="pill off" id="allCount">0</span></h2>
+      <p class="hint">Every registered account.</p>
+      <div id="all"></div>
+    </section>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="/admin/admin.js" defer></script>
+</body>
+</html>

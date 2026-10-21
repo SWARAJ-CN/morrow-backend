@@ -1,5 +1,5 @@
 /**
- * Morrow AI task definitions.
+ * Assistant task definitions.
  *
  * Every task is a system prompt plus a short, structured user payload. The
  * prompts are written to survive a small model: they state the exact JSON
@@ -126,7 +126,7 @@ export function summarizeTask({ transcript, displayName, peerName }) {
 export function assistantTask({ question, transcript, displayName, peerName, history }) {
   const system = [
     BASE_RULES,
-    'You are Morrow AI, a helpful assistant built into a private chat app.',
+    'You are the Morrow assistant, a helpful helper built into a private chat app.',
     'You can see the current conversation so you can answer questions about it.',
     'If the user asks what to reply, draft the reply for them and say it is a draft they can edit.',
     'Keep answers short and concrete — this is a phone screen, not a document.',
@@ -139,7 +139,7 @@ export function assistantTask({ question, transcript, displayName, peerName, his
     displayName ? `The user is ${displayName}.` : '',
     peerName ? `They are chatting with ${peerName}.` : '',
     transcript ? `Current conversation:\n${transcript}` : 'There is no conversation open right now.',
-    history?.length ? `Earlier in this chat with Morrow AI:\n${history.map((item) => `${item.role === 'user' ? 'User' : 'Morrow AI'}: ${item.content}`).join('\n')}` : '',
+    history?.length ? `Earlier in this chat with the assistant:\n${history.map((item) => `${item.role === 'user' ? 'User' : 'Assistant'}: ${item.content}`).join('\n')}` : '',
   ].filter(Boolean).join('\n\n');
 
   return { system, user, json: false, maxTokens: 1600, temperature: 0.6 };
