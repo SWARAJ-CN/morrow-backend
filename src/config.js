@@ -21,4 +21,16 @@ export const config = {
     apiSecret: process.env.CLOUDINARY_API_SECRET || '',
     folder: process.env.CLOUDINARY_FOLDER || 'morrow',
   },
+  // The assistant is a server-side proxy to an LLM. The key stays on the
+  // server; the app only ever calls /api/assistant.
+  // When no key is set the app falls back to its on-device assistant.
+  assistant: {
+    provider: (process.env.AI_PROVIDER || 'groq').toLowerCase(),
+    apiKey: process.env.AI_API_KEY || '',
+    baseUrl: process.env.AI_BASE_URL || '',
+    model: process.env.AI_MODEL || '',
+    // A smaller, quicker model for the suggestions that appear above the
+    // composer — they have to feel instant.
+    fastModel: process.env.AI_FAST_MODEL || '',
+  },
 };

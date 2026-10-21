@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "check": "node --check src/server.js && node --check src/cloudinary.js && node --check src/push.js && node --check src/socket.js && node --check src/middleware/upload.js && node --check src/routes/auth.js && node --check src/routes/conversations.js && node --check src/routes/notifications.js && node --check src/routes/stories.js && node --check src/routes/uploads.js && node --check src/routes/users.js"
+    "check": "node --check src/server.js && node --check src/cloudinary.js && node --check src/push.js && node --check src/socket.js && node --check src/middleware/upload.js && node --check src/ai/provider.js && node --check src/ai/prompts.js && node --check src/routes/auth.js && node --check src/routes/assistant.js && node --check src/routes/conversations.js && node --check src/routes/notifications.js && node --check src/routes/stories.js && node --check src/routes/uploads.js && node --check src/routes/users.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

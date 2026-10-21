@@ -7,6 +7,7 @@ import { Server } from 'socket.io';
 import { config } from './config.js';
 import { connectDatabase } from './db.js';
 import { authRouter } from './routes/auth.js';
+import { assistantRouter } from './routes/assistant.js';
 import { conversationRouter } from './routes/conversations.js';
 import { notificationRouter } from './routes/notifications.js';
 import { storyRouter } from './routes/stories.js';
@@ -33,16 +34,24 @@ app.use(cors({ origin: originCheck }));
 app.use(express.json({ limit: '10kb' }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 200, standardHeaders: 'draft-8', legacyHeaders: false }));
 app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-8', legacyHeaders: false }));
+// Assistant calls cost money on the provider's side, so they get a much
+// tighter budget than ordinary API traffic.
+const assistantLimiter = rateLimit({ windowMs: 10 * 60 * 1000, limit: 60, standardHeaders: 'draft-8', legacyHeaders: false });
+app.use('/api/assistant', assistantLimiter);
+app.use('/api/ai', assistantLimiter);
 
 app.get('/', (_request, response) => response.json({
   name: 'Morrow API',
   status: 'ok',
   message: 'Morrow backend is running. The mobile app talks to /api/*.',
-  endpoints: ['/health', '/api/auth', '/api/conversations', '/api/users', '/api/stories', '/api/notifications', '/api/uploads'],
+  endpoints: ['/health', '/api/auth', '/api/conversations', '/api/users', '/api/stories', '/api/notifications', '/api/uploads', '/api/assistant'],
 }));
 app.get('/health', (_request, response) => response.json({ status: 'ok' }));
 app.use('/uploads', express.static('uploads', { dotfiles: 'deny', index: false, maxAge: '1d' }));
 app.use('/api/auth', authRouter);
+app.use('/api/assistant', assistantRouter);
+// Backwards-compatible alias for clients built before the rename.
+app.use('/api/ai', assistantRouter);
 app.use('/api/conversations', conversationRouter);
 app.use('/api/notifications', notificationRouter);
 app.use('/api/stories', storyRouter);
